@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">TBD</string>
+    <string name="ic_cast_black_24dp">cast</string>
+    <string name="ic_stop_black_24dp">stop</string>
+    <string name="ic_add_box_black_24dp">add</string>
+    <string name="ic_pause_circle_filled_black_24dp">pause</string>
+    <string name="ic_playlist_add_black_24p">add</string>
+    <string name="action_settings">settings</string>
 </resources>

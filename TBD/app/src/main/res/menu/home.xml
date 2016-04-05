@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Action buttons: cast, stop, add animation -->
+    <item
+        android:id="@+id/cast_black"
+        android:icon="@mipmap/ic_cast_black_24dp"
+        android:title="@string/ic_cast_black_24dp"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/pause_black"
+        android:icon="@mipmap/ic_pause_circle_filled_black_24dp"
+        android:title="@string/ic_pause_circle_filled_black_24dp"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/playlist_black"
+        android:icon="@mipmap/ic_playlist_add_black_24dp"
+        android:title="@string/ic_playlist_add_black_24p"
+        app:showAsAction="ifRoom"/>
+
+    <!-- Settings, should always be in the overflow -->
+    <!--<item-->
+        <!--android:id="@+id/action_settings"-->
+        <!--android:title="@string/action_settings"-->
+        <!--app:showAsAction="never"/>-->
+</menu>
