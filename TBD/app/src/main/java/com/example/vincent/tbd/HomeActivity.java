@@ -30,10 +30,12 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import pl.droidsonroids.gif.GifDrawable;
+import pl.droidsonroids.gif.GifImageView;
 
 public class HomeActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private ItemAdapter mAdapter;
+    private GifImageView mGifImageView;
     private List<Item> ItemList;
 
     // Creates data for list
@@ -61,6 +63,7 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        mGifImageView = (GifImageView) findViewById(R.id.gifView);
         initializeData();
         initializeRecycler();
         initializeAdapter();
@@ -84,6 +87,7 @@ public class HomeActivity extends AppCompatActivity {
                 return true;
             case R.id.pause_black:
                 // Stop the animation and return to standby
+                stopAnimation();
                 return true;
             case R.id.playlist_black:
                 // Adds to RecyclerView
@@ -92,6 +96,11 @@ public class HomeActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    // Stops currently playing animation
+    private void stopAnimation() {
+        mGifImageView.setImageResource(R.drawable.black);
     }
 
     // Adds items to list
