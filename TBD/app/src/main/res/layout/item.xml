@@ -6,6 +6,8 @@
     android:layout_height="wrap_content"
     android:id="@+id/cv"
     app:cardUseCompatPadding="true"
+    android:clickable="true"
+    android:foreground="?android:attr/selectableItemBackground"
     >
 
     <RelativeLayout

@@ -24,12 +24,14 @@ import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import pl.droidsonroids.gif.GifDrawable;
+
 public class HomeActivity extends AppCompatActivity {
-    private static final int REQUEST_DIRECTORY = 0;
     private RecyclerView mRecyclerView;
     private ItemAdapter mAdapter;
     private List<Item> ItemList;
@@ -39,13 +41,13 @@ public class HomeActivity extends AppCompatActivity {
     private void initializeData() {
         ItemList = new ArrayList<>();
         for(; i < 3; i++) {
-            ItemList.add(new Item("Test "+ i, R.mipmap.ic_launcher));
+            ItemList.add(new Item("Test "+ i, R.mipmap.ic_launcher, "NULL"));
         }
     }
 
     // Creates the adapter for items
     private void initializeAdapter() {
-        mAdapter = new ItemAdapter(ItemList);
+        mAdapter = new ItemAdapter(this, ItemList);
         mRecyclerView.setAdapter(mAdapter);
     }
 
@@ -96,7 +98,7 @@ public class HomeActivity extends AppCompatActivity {
     private void addToList() {
         // Starts the file manager
         Intent intent = new Intent(this, FilePickerActivity.class);
-        intent.putExtra(FilePickerActivity.ARG_FILE_FILTER, Pattern.compile(".*\\.mp4$"));
+        intent.putExtra(FilePickerActivity.ARG_FILE_FILTER, Pattern.compile(".*(gif|mp4)$"));
         intent.putExtra(FilePickerActivity.ARG_DIRECTORIES_FILTER, false);
         intent.putExtra(FilePickerActivity.ARG_SHOW_HIDDEN, false);
         startActivityForResult(intent, 1);
@@ -109,12 +111,13 @@ public class HomeActivity extends AppCompatActivity {
             // Returns the filepath from file manager
             String filePath = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
 
-            // Adds the item to the list
+            // Strips path to just the filename
             String[] parts1 = filePath.split("/");
             String last = parts1[parts1.length-1];
             String[] parts2 = last.split("\\.");
             String fileName = parts2[0];
-            ItemList.add(new Item(fileName, R.mipmap.ic_launcher));
+            // Adds the item to the list
+            ItemList.add(new Item(fileName, R.mipmap.ic_launcher, filePath));
             mAdapter.notifyItemInserted(ItemList.size()-1);
         }
     }

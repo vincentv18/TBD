@@ -9,11 +9,12 @@ import java.util.List;
  * Created by Vincent on 4/4/16.
  */
 public class Item {
-    String title;
+    String title, path;
     int thumbnail;
 
-    Item(String title, int thumbnail) {
+    Item(String title, int thumbnail, String path) {
         this.title = title;
         this.thumbnail = thumbnail;
+        this.path = path;
     }
 }
