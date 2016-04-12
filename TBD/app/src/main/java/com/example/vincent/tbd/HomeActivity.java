@@ -47,26 +47,20 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    // Creates the adapter for items
-    private void initializeAdapter() {
-        mAdapter = new ItemAdapter(this, ItemList);
-        mRecyclerView.setAdapter(mAdapter);
-    }
-
-    // Initialize recycler view
-    private void initializeRecycler() {
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        mGifImageView = (GifImageView) findViewById(R.id.gifView);
+
         initializeData();
-        initializeRecycler();
-        initializeAdapter();
+        // Init GifImage View
+        mGifImageView = (GifImageView) findViewById(R.id.gifView);
+        // Init Recycler View
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // Init Adapter for items
+        mAdapter = new ItemAdapter(this, ItemList);
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     @Override
@@ -87,7 +81,7 @@ public class HomeActivity extends AppCompatActivity {
                 return true;
             case R.id.pause_black:
                 // Stop the animation and return to standby
-                stopAnimation();
+                mGifImageView.setImageResource(R.drawable.black);
                 return true;
             case R.id.playlist_black:
                 // Adds to RecyclerView
@@ -96,11 +90,6 @@ public class HomeActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    // Stops currently playing animation
-    private void stopAnimation() {
-        mGifImageView.setImageResource(R.drawable.black);
     }
 
     // Adds items to list
