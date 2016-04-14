@@ -5,6 +5,8 @@ import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Environment;
@@ -60,7 +62,8 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     private void initializeData() {
         ItemList = new ArrayList<>();
         for(; i < 3; i++) {
-            ItemList.add(new Item("Test "+ i, R.mipmap.ic_launcher, "NULL"));
+            Bitmap bm = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+            ItemList.add(new Item("Test "+ i, bm, "NULL"));
         }
     }
 
@@ -167,13 +170,22 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
             // Returns the filepath from file manager
             String filePath = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
 
+            // Get thumbnail from gif
+            Bitmap bm = null;
+            try {
+                GifDrawable gifFromPath = new GifDrawable(filePath);
+                bm = Bitmap.createScaledBitmap(gifFromPath.getCurrentFrame(), 200, 200, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             // Strips path to just the filename
             String[] parts1 = filePath.split("/");
             String last = parts1[parts1.length-1];
             String[] parts2 = last.split("\\.");
             String fileName = parts2[0];
             // Adds the item to the RecyclerView
-            ItemList.add(new Item(fileName, R.mipmap.ic_launcher, filePath));
+            ItemList.add(new Item(fileName, bm, filePath));
             mAdapter.notifyItemInserted(ItemList.size()-1);
         }
     }

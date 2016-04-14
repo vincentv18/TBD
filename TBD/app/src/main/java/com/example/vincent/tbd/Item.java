@@ -1,5 +1,6 @@
 package com.example.vincent.tbd;
 
+import android.graphics.Bitmap;
 import android.support.annotation.DrawableRes;
 
 import java.util.ArrayList;
@@ -10,9 +11,9 @@ import java.util.List;
  */
 public class Item {
     String title, path;
-    int thumbnail;
+    Bitmap thumbnail;
 
-    Item(String title, int thumbnail, String path) {
+    Item(String title, Bitmap thumbnail, String path) {
         this.title = title;
         this.thumbnail = thumbnail;
         this.path = path;

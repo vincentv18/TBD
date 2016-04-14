@@ -31,6 +31,7 @@
             android:id="@+id/textView"
             android:layout_toRightOf="@+id/imageView"
             android:layout_alignParentTop="true"
+            android:gravity="center_vertical"
             android:textSize="30sp"
             />
 

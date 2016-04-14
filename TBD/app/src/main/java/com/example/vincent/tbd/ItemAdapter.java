@@ -57,7 +57,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
     @Override
     public void onBindViewHolder(ItemViewHolder itemViewHolder, final int i) {
         itemViewHolder.textView.setText(ItemList.get(i).title);
-        itemViewHolder.imageView.setImageResource(ItemList.get(i).thumbnail);
+        itemViewHolder.imageView.setImageBitmap(ItemList.get(i).thumbnail);
 
         itemViewHolder.cv.setOnClickListener(new View.OnClickListener() {
             @Override
