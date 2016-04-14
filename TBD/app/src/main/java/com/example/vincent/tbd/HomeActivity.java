@@ -97,8 +97,8 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         mUpdateHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                String message = msg.getData().getString("msg");
-                receiveMsg(message);
+                String tst = msg.getData().getString("msg");
+                receiveMsg(tst);
             }
         };
         mConnection = new ChatConnection(mUpdateHandler);
@@ -106,6 +106,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         // Init NSD
         mNsdHelper = new NsdHelper(this, this);
         mNsdHelper.setLogEnabled(true);
+        mNsdHelper.setAutoResolveEnabled(false);
         mNsdHelper.setDiscoveryTimeout(360);
         mNsdHelper.registerService(getLocalBluetoothName(), NsdType.HTTP);
         // Discover device
@@ -128,7 +129,8 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         switch (item.getItemId()) {
             case R.id.cast_black:
                 // Connect the device to a host
-                clickCast();
+                Intent connect = new Intent(this, ConnectionActivity.class);
+                startActivity(connect);
                 return true;
             case R.id.pause_black:
                 // Stop the animation and return to standby
@@ -137,11 +139,11 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
                 return true;
             case R.id.playlist_black:
                 // Starts the file manager
-                Intent intent = new Intent(this, FilePickerActivity.class);
-                intent.putExtra(FilePickerActivity.ARG_FILE_FILTER, Pattern.compile(".*(gif|mp4)$"));
-                intent.putExtra(FilePickerActivity.ARG_DIRECTORIES_FILTER, false);
-                intent.putExtra(FilePickerActivity.ARG_SHOW_HIDDEN, false);
-                startActivityForResult(intent, 1);
+                Intent filePicker = new Intent(this, FilePickerActivity.class);
+                filePicker.putExtra(FilePickerActivity.ARG_FILE_FILTER, Pattern.compile(".*(gif|mp4)$"));
+                filePicker.putExtra(FilePickerActivity.ARG_DIRECTORIES_FILTER, false);
+                filePicker.putExtra(FilePickerActivity.ARG_SHOW_HIDDEN, false);
+                startActivityForResult(filePicker, 1);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -149,10 +151,6 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     }
     //--------------------------------------------------------------------------------------
     // Connection
-    public void clickCast() {
-
-    }
-
     public void sendMsg() {
         mConnection.sendMessage("Test");
     }
