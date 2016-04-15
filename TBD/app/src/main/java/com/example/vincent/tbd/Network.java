@@ -21,33 +21,33 @@ import java.util.concurrent.BlockingQueue;
 /**
  * Created by Vincent on 4/12/16.
  */
-public class ChatConnection {
-    private Handler mUpdateHandler;
-    private ChatServer mChatServer;
-    private ChatClient mChatClient;
+public class Network {
+    private Handler mHandler;
+    private Server mServer;
+    private Client mClient;
 
-    private static final String TAG = "ChatConnection";
+    private static final String TAG = "Network";
 
     private Socket mSocket;
     private int mPort = -1;
 
-    public ChatConnection(Handler handler) {
-        mUpdateHandler = handler;
-        mChatServer = new ChatServer(handler);
+    public Network(Handler handler) {
+        mHandler = handler;
+        mServer = new Server(handler);
     }
 
     public void tearDown() {
-        mChatServer.tearDown();
-        mChatClient.tearDown();
+        mServer.tearDown();
+        mClient.tearDown();
     }
 
     public void connectToServer(InetAddress address, int port) {
-        mChatClient = new ChatClient(address, port);
+        mClient = new Client(address, port);
     }
 
     public void sendMessage(String msg) {
-        if (mChatClient != null) {
-            mChatClient.sendMessage(msg);
+        if (mClient != null) {
+            mClient.sendMessage(msg);
         }
     }
 
@@ -74,7 +74,7 @@ public class ChatConnection {
 
         Message message = new Message();
         message.setData(messageBundle);
-        mUpdateHandler.sendMessage(message);
+        mHandler.sendMessage(message);
 
     }
 
@@ -98,12 +98,13 @@ public class ChatConnection {
     private Socket getSocket() {
         return mSocket;
     }
-
-    private class ChatServer {
+    //--------------------------------------------------------------------------------------
+    // Server
+    private class Server {
         ServerSocket mServerSocket = null;
         Thread mThread = null;
 
-        public ChatServer(Handler handler) {
+        public Server(Handler handler) {
             mThread = new Thread(new ServerThread());
             mThread.start();
         }
@@ -118,10 +119,8 @@ public class ChatConnection {
         }
 
         class ServerThread implements Runnable {
-
             @Override
             public void run() {
-
                 try {
                     // Since discovery will happen via Nsd, we don't need to care which port is
                     // used.  Just grab an available one  and advertise it via Nsd.
@@ -132,7 +131,7 @@ public class ChatConnection {
                         Log.d(TAG, "ServerSocket Created, awaiting connection");
                         setSocket(mServerSocket.accept());
                         Log.d(TAG, "Connected.");
-                        if (mChatClient == null) {
+                        if (mClient == null) {
                             int port = mSocket.getPort();
                             InetAddress address = mSocket.getInetAddress();
                             connectToServer(address, port);
@@ -145,20 +144,21 @@ public class ChatConnection {
             }
         }
     }
-
-    private class ChatClient {
+    //--------------------------------------------------------------------------------------
+    //Client
+    private class Client {
 
         private InetAddress mAddress;
         private int PORT;
 
-        private final String CLIENT_TAG = "ChatClient";
+        private final String CLIENT_TAG = "Client";
 
         private Thread mSendThread;
         private Thread mRecThread;
 
-        public ChatClient(InetAddress address, int port) {
+        public Client(InetAddress address, int port) {
 
-            Log.d(CLIENT_TAG, "Creating chatClient");
+            Log.d(CLIENT_TAG, "Creating Client");
             this.mAddress = address;
             this.PORT = port;
 

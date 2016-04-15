@@ -9,11 +9,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
-import com.rafakob.nsdhelper.NsdHelper;
-import com.rafakob.nsdhelper.NsdListener;
-import com.rafakob.nsdhelper.NsdService;
-import com.rafakob.nsdhelper.NsdType;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +51,7 @@ public class ConnectionActivity extends AppCompatActivity implements NsdListener
         mNsdHelper.setLogEnabled(true);
         mNsdHelper.setAutoResolveEnabled(false);
         mNsdHelper.setDiscoveryTimeout(360);
-        mNsdHelper.registerService(getLocalBluetoothName(), NsdType.HTTP);
+//        mNsdHelper.registerService(getLocalBluetoothName(), NsdType.HTTP, );
         // Discover device
         mNsdHelper.startDiscovery(NsdType.HTTP);
 
@@ -110,6 +105,7 @@ public class ConnectionActivity extends AppCompatActivity implements NsdListener
 
     @Override
     public void onNsdServiceLost(NsdService lostService) {
+        // This is wrong, fix!
         String name = lostService.getName();
         for (String device : devices) {
             if (device.equals(name)) { devices.remove(device); }

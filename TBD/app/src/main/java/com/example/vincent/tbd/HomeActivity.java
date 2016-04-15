@@ -29,10 +29,6 @@ import android.widget.Toast;
 import android.os.Handler;
 
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
-import com.rafakob.nsdhelper.NsdHelper;
-import com.rafakob.nsdhelper.NsdListener;
-import com.rafakob.nsdhelper.NsdService;
-import com.rafakob.nsdhelper.NsdType;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -52,7 +48,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     private Handler mUpdateHandler;
     private BluetoothAdapter mBluetoothAdapter;
 
-    ChatConnection mConnection;
+    Network mNetwork;
     NsdHelper mNsdHelper;
 
     public static final String TAG = "NsdChat";
@@ -104,14 +100,20 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
                 receiveMsg(tst);
             }
         };
-        mConnection = new ChatConnection(mUpdateHandler);
+        mNetwork = new Network(mUpdateHandler);
 
         // Init NSD
         mNsdHelper = new NsdHelper(this, this);
         mNsdHelper.setLogEnabled(true);
-        mNsdHelper.setAutoResolveEnabled(false);
+//        mNsdHelper.setAutoResolveEnabled(false);
         mNsdHelper.setDiscoveryTimeout(360);
-        mNsdHelper.registerService(getLocalBluetoothName(), NsdType.HTTP);
+        
+        // Register device
+        if(mNetwork.getLocalPort() > -1) {
+            mNsdHelper.registerService(getLocalBluetoothName(), NsdType.HTTP, mNetwork.getLocalPort());
+        } else {
+            Log.d(TAG, "ServerSocket isn't bound.");
+        }
         // Discover device
         mNsdHelper.startDiscovery(NsdType.HTTP);
     }
@@ -155,7 +157,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     //--------------------------------------------------------------------------------------
     // Connection
     public void sendMsg() {
-        mConnection.sendMessage("Test");
+        mNetwork.sendMessage("Test");
     }
 
     public void receiveMsg(String line) {
@@ -215,8 +217,8 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
 
     @Override
     public void onNsdServiceResolved(NsdService resolvedService) {
-        Log.d(TAG, "Connecting.");
-        mConnection.connectToServer(resolvedService.getHost(),
+        Log.d(TAG, Integer.toString(resolvedService.getPort()));
+        mNetwork.connectToServer(resolvedService.getHost(),
                 resolvedService.getPort());
 
     }
