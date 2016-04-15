@@ -34,7 +34,9 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import pl.droidsonroids.gif.GifDrawable;
@@ -47,6 +49,9 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     private List<Item> ItemList;
     private Handler mUpdateHandler;
     private BluetoothAdapter mBluetoothAdapter;
+
+    private ArrayList<String> devices = new ArrayList<>();;
+    private Map<String, NsdService> services = new HashMap<String, NsdService>();
 
     Network mNetwork;
     NsdHelper mNsdHelper;
@@ -105,7 +110,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         // Init NSD
         mNsdHelper = new NsdHelper(this, this);
         mNsdHelper.setLogEnabled(true);
-//        mNsdHelper.setAutoResolveEnabled(false);
+        mNsdHelper.setAutoResolveEnabled(false);
         mNsdHelper.setDiscoveryTimeout(360);
         
         // Register device
@@ -133,9 +138,11 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         // Handle item selection from menu
         switch (item.getItemId()) {
             case R.id.cast_black:
-                // Connect the device to a host
+                // Starts Connection Activity
+                // to see which device is available
                 Intent connect = new Intent(this, ConnectionActivity.class);
-                startActivity(connect);
+                connect.putStringArrayListExtra("list", devices);
+                startActivityForResult(connect, 1);
                 return true;
             case R.id.pause_black:
                 // Stop the animation and return to standby
@@ -143,12 +150,12 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
                 sendMsg();
                 return true;
             case R.id.playlist_black:
-                // Starts the file manager
+                // Starts the File Manager
                 Intent filePicker = new Intent(this, FilePickerActivity.class);
                 filePicker.putExtra(FilePickerActivity.ARG_FILE_FILTER, Pattern.compile(".*(gif|mp4)$"));
                 filePicker.putExtra(FilePickerActivity.ARG_DIRECTORIES_FILTER, false);
                 filePicker.putExtra(FilePickerActivity.ARG_SHOW_HIDDEN, false);
-                startActivityForResult(filePicker, 1);
+                startActivityForResult(filePicker, 2);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -164,11 +171,23 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         Toast.makeText(this, line, Toast.LENGTH_SHORT).show();
     }
     //--------------------------------------------------------------------------------------
-    // Data from FilePickerActivity
+    // Results from activites
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        // Results from Connection Activity
         if (requestCode == 1 && resultCode == RESULT_OK) {
+            String deviceName = data.getStringExtra("deviceName");
+            if(services.containsKey(deviceName)) {
+                mNsdHelper.resolveService(services.get(deviceName));
+            } else {
+                Toast.makeText(this, "Connection not established", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        // Results from File Manager
+        if (requestCode == 2 && resultCode == RESULT_OK) {
             // Returns the filepath from file manager
             String filePath = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
 
@@ -192,14 +211,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         }
     }
     //--------------------------------------------------------------------------------------
-    // Activity states
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mNsdHelper.stopDiscovery();
-        mNsdHelper.unregisterService();
-    }
-
+    // NSD Wrappers
     @Override
     public void onNsdRegistered(NsdService registeredService) {
 
@@ -212,25 +224,47 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
 
     @Override
     public void onNsdServiceFound(NsdService foundService) {
-
+        boolean found = false;
+        String name = foundService.getName();
+        // Doesn't add duplicates
+        for (String device : devices) {
+            if (device.equals(name)) { found = true; }
+        }
+        if (!found) {
+            devices.add(foundService.getName());
+            services.put(name, foundService);
+        }
     }
 
     @Override
     public void onNsdServiceResolved(NsdService resolvedService) {
-        Log.d(TAG, Integer.toString(resolvedService.getPort()));
+        // Establish connection with 2nd device
         mNetwork.connectToServer(resolvedService.getHost(),
                 resolvedService.getPort());
-
     }
 
     @Override
     public void onNsdServiceLost(NsdService lostService) {
-
+        String name = lostService.getName();
+        // Removes service from list
+        if (devices.contains(name)) {
+            devices.remove(name);
+            services.remove(name);
+        }
     }
 
     @Override
     public void onNsdError(String errorMessage, int errorCode, String errorSource) {
 
+    }
+
+    //--------------------------------------------------------------------------------------
+    // Activity states
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mNsdHelper.stopDiscovery();
+        mNsdHelper.unregisterService();
     }
 }
 
