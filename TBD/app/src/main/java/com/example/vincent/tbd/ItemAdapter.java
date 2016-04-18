@@ -68,6 +68,9 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
                     // Sets GifView using file path
                     GifDrawable gifFromPath = new GifDrawable(ItemList.get(i).path);
                     gifImageView.setImageDrawable(gifFromPath);
+
+                    // Send to client
+                    ((HomeActivity)mContext).sendMsg(ItemList.get(i).title);
                 } catch (IOException e) {
                     e.printStackTrace();
                     Toast.makeText(v.getContext(), "File could not be found", Toast.LENGTH_SHORT).show();

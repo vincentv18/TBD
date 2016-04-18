@@ -29,6 +29,8 @@ import android.widget.Toast;
 import android.os.Handler;
 
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
+import com.sromku.simple.storage.SimpleStorage;
+import com.sromku.simple.storage.Storage;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -50,22 +52,42 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     private Handler mUpdateHandler;
     private BluetoothAdapter mBluetoothAdapter;
 
-    private ArrayList<String> devices = new ArrayList<>();;
+    private ArrayList<String> devices = new ArrayList<>();
     private Map<String, NsdService> services = new HashMap<String, NsdService>();
 
     Network mNetwork;
     NsdHelper mNsdHelper;
 
+    Storage storage = SimpleStorage.getExternalStorage();
+
     public static final String TAG = "NsdChat";
 
-    // Creates data for list
-    int i = 0;
+    //--------------------------------------------------------------------------------------
+    // Helper Functions
     private void initializeData() {
-        ItemList = new ArrayList<>();
-        for(; i < 3; i++) {
-            Bitmap bm = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-            ItemList.add(new Item("Test "+ i, bm, "NULL"));
+        // Gets data from external storage
+        String content = storage.readTextFile("ShowMeHow", "animation_list.txt");
+        String[] info = content.split("\\r?\\n");
+        if (!content.equals("")) {
+            for(int i = 0; i < info.length; ++i) {
+                String[] files = info[i].split(":");
+                Bitmap bm = getThumbnail(files[1]);
+                ItemList.add(new Item(files[0], bm, files[1]));
+                mAdapter.notifyDataSetChanged();
+            }
         }
+    }
+
+    // Get thumbnail from gif
+    Bitmap getThumbnail(String filePath) {
+        Bitmap bm = null;
+        try {
+            GifDrawable gifFromPath = new GifDrawable(filePath);
+            bm = Bitmap.createScaledBitmap(gifFromPath.getCurrentFrame(), 200, 200, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bm;
     }
 
     // Returns bluetooth name
@@ -87,13 +109,13 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        initializeData();
         // Init GifImage View
         mGifImageView = (GifImageView) findViewById(R.id.gifView);
         // Init Recycler View
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         // Init Adapter for items
+        ItemList = new ArrayList<>();
         mAdapter = new ItemAdapter(this, ItemList);
         mRecyclerView.setAdapter(mAdapter);
 
@@ -121,6 +143,14 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         }
         // Discover device
         mNsdHelper.startDiscovery(NsdType.HTTP);
+
+        // Storage
+        storage.createDirectory("ShowMeHow");
+        if (!storage.isFileExist("ShowMeHow", "animation_list.txt")) {
+            storage.createFile("ShowMeHow", "animation_list.txt", "");
+        } else {
+            initializeData();
+        }
     }
     //--------------------------------------------------------------------------------------
     // Menu options
@@ -147,7 +177,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
             case R.id.pause_black:
                 // Stop the animation and return to standby
                 mGifImageView.setImageResource(R.drawable.black);
-                sendMsg();
+                sendMsg("_STOP_ANIMATION_");
                 return true;
             case R.id.playlist_black:
                 // Starts the File Manager
@@ -163,15 +193,29 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     }
     //--------------------------------------------------------------------------------------
     // Connection
-    public void sendMsg() {
-        mNetwork.sendMessage("Test");
+    public void sendMsg(String line) {
+        mNetwork.sendMessage(line);
     }
 
     public void receiveMsg(String line) {
-        Toast.makeText(this, line, Toast.LENGTH_SHORT).show();
+        // Checks if client or local
+        if(Character.toString(line.charAt(0)).equals("c")) {
+            String fileName = line.substring(1);
+            if (fileName.equals("_CAST_MODE_INITIALIZE_")) {
+                // Start "Cast Mode"
+                Intent cast = new Intent(this, CastActivity.class);
+                startActivity(cast);
+            }
+            else if (fileName.equals("_STOP_ANIMATION_")){
+                CastActivity.stop();
+            }
+            else {
+                CastActivity.display(fileName, storage);
+            }
+        }
     }
     //--------------------------------------------------------------------------------------
-    // Results from activites
+    // Results from activities
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -191,23 +235,19 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
             // Returns the filepath from file manager
             String filePath = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
 
-            // Get thumbnail from gif
-            Bitmap bm = null;
-            try {
-                GifDrawable gifFromPath = new GifDrawable(filePath);
-                bm = Bitmap.createScaledBitmap(gifFromPath.getCurrentFrame(), 200, 200, true);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // Get thumbnail
+            Bitmap bm = getThumbnail(filePath);
 
             // Strips path to just the filename
             String[] parts1 = filePath.split("/");
             String last = parts1[parts1.length-1];
             String[] parts2 = last.split("\\.");
             String fileName = parts2[0];
-            // Adds the item to the RecyclerView
+
+            // Adds the item to the RecyclerView and storage
             ItemList.add(new Item(fileName, bm, filePath));
-            mAdapter.notifyItemInserted(ItemList.size()-1);
+            storage.appendFile("ShowMeHow", "animation_list.txt", fileName + ":" + filePath + ":");
+            mAdapter.notifyDataSetChanged();
         }
     }
     //--------------------------------------------------------------------------------------
@@ -241,7 +281,16 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         // Establish connection with 2nd device
         mNetwork.connectToServer(resolvedService.getHost(),
                 resolvedService.getPort());
+        // Start "Cast mode"
+        mUpdateHandler.postDelayed(r, 2000);
     }
+
+    Runnable r = new Runnable() {
+        @Override
+        public void run(){
+            sendMsg("_CAST_MODE_INITIALIZE_");
+        }
+    };
 
     @Override
     public void onNsdServiceLost(NsdService lostService) {

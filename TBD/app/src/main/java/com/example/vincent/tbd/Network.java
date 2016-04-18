@@ -64,9 +64,9 @@ public class Network {
         Log.e(TAG, "Updating message: " + msg);
 
         if (local) {
-            msg = "me: " + msg;
+            msg = "l" + msg;
         } else {
-            msg = "them: " + msg;
+            msg = "c" + msg;
         }
 
         Bundle messageBundle = new Bundle();
@@ -75,7 +75,6 @@ public class Network {
         Message message = new Message();
         message.setData(messageBundle);
         mHandler.sendMessage(message);
-
     }
 
     private synchronized void setSocket(Socket socket) {
