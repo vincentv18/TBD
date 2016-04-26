@@ -25,6 +25,8 @@ public class Network {
     private Handler mHandler;
     private Server mServer;
     private Client mClient;
+    private boolean serverConnected = false;
+    private boolean clientConnected = false;
 
     private static final String TAG = "Network";
 
@@ -41,6 +43,14 @@ public class Network {
         mClient.tearDown();
     }
 
+    public void tearDownClient() {
+        mClient.tearDown();
+    }
+
+    public void tearDownServer() {
+        mServer.tearDown();
+    }
+
     public void connectToServer(InetAddress address, int port) {
         mClient = new Client(address, port);
     }
@@ -49,6 +59,10 @@ public class Network {
         if (mClient != null) {
             mClient.sendMessage(msg);
         }
+    }
+
+    public boolean isClientConnected() {
+        return clientConnected;
     }
 
     public int getLocalPort() {
@@ -112,6 +126,7 @@ public class Network {
             mThread.interrupt();
             try {
                 mServerSocket.close();
+                Log.d(TAG, "Server closed");
             } catch (IOException ioe) {
                 Log.e(TAG, "Error when closing server socket.");
             }
@@ -180,6 +195,7 @@ public class Network {
                     if (getSocket() == null) {
                         setSocket(new Socket(mAddress, PORT));
                         Log.d(CLIENT_TAG, "Client-side socket initialized.");
+                        clientConnected = true;
 
                     } else {
                         Log.d(CLIENT_TAG, "Socket already initialized. skipping!");
@@ -237,6 +253,7 @@ public class Network {
         public void tearDown() {
             try {
                 getSocket().close();
+                Log.d(CLIENT_TAG, "Client closed");
             } catch (IOException ioe) {
                 Log.e(CLIENT_TAG, "Error when closing server socket.");
             }

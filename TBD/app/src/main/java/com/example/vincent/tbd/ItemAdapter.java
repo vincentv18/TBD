@@ -1,10 +1,13 @@
 package com.example.vincent.tbd;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +20,9 @@ import java.util.List;
 
 import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
+
+import com.sromku.simple.storage.SimpleStorage;
+import com.sromku.simple.storage.Storage;
 
 /**
  * Created by Vincent on 4/4/16.
@@ -63,18 +69,55 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
             @Override
             public void onClick(View v) {
                 // Handles when the CardView is clicked
-                GifImageView gifImageView = (GifImageView) ((Activity)mContext).findViewById(R.id.gifView);
+                GifImageView gifImageView = (GifImageView) ((Activity) mContext).findViewById(R.id.gifView);
                 try {
                     // Sets GifView using file path
                     GifDrawable gifFromPath = new GifDrawable(ItemList.get(i).path);
                     gifImageView.setImageDrawable(gifFromPath);
 
                     // Send to client
-                    ((HomeActivity)mContext).sendMsg(ItemList.get(i).title);
+                    ((HomeActivity) mContext).sendMsg(ItemList.get(i).title);
                 } catch (IOException e) {
                     e.printStackTrace();
                     Toast.makeText(v.getContext(), "File could not be found", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        itemViewHolder.cv.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                new AlertDialog.Builder(mContext)
+                        .setTitle("Delete")
+                        .setMessage("Are you sure you want to delete this entry?")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // continue with delete
+                                Storage storage = SimpleStorage.getExternalStorage();
+                                String content = storage.readTextFile("ShowMeHow", "animation_list.txt");
+                                String[] info = content.split("\\r?\\n");
+                                storage.deleteFile("ShowMeHow", "animation_list.txt");
+                                storage.createFile("ShowMeHow", "animation_list.txt", "");
+
+                                for(int j = 0; j < info.length; ++j) {
+                                    String[] files = info[j].split(":");
+                                    if(j != i) {
+                                        Log.d("Adapter", "add to file: " + files[0]);
+                                        storage.appendFile("ShowMeHow", "animation_list.txt", files[0] + ":" + files[1] + ":");
+                                    }
+                                }
+                                ItemList.remove(i);
+                                notifyDataSetChanged();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_menu_delete)
+                        .show();
+                return true;
             }
         });
     }

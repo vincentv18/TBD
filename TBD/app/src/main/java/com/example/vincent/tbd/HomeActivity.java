@@ -2,6 +2,7 @@ package com.example.vincent.tbd;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -51,6 +52,8 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     private List<Item> ItemList;
     private Handler mUpdateHandler;
     private BluetoothAdapter mBluetoothAdapter;
+    private ProgressDialog mProgressDialog;
+    private Menu mMenu;
 
     private ArrayList<String> devices = new ArrayList<>();
     private Map<String, NsdService> services = new HashMap<String, NsdService>();
@@ -159,7 +162,8 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         // Creates the menu
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.home, menu);
-        setTitle("Home");
+        setTitle("Hub");
+        mMenu = menu;
         return true;
     }
 
@@ -170,11 +174,9 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
             case R.id.cast_black:
                 // Starts Connection Activity
                 // to see which device is available
-                Intent connect = new Intent(this, ConnectionActivity.class);
-                connect.putStringArrayListExtra("list", devices);
-                startActivityForResult(connect, 1);
+                cast();
                 return true;
-            case R.id.pause_black:
+            case R.id.stop_black:
                 // Stop the animation and return to standby
                 mGifImageView.setImageResource(R.drawable.black);
                 sendMsg("_STOP_ANIMATION_");
@@ -182,7 +184,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
             case R.id.playlist_black:
                 // Starts the File Manager
                 Intent filePicker = new Intent(this, FilePickerActivity.class);
-                filePicker.putExtra(FilePickerActivity.ARG_FILE_FILTER, Pattern.compile(".*(gif|mp4)$"));
+                filePicker.putExtra(FilePickerActivity.ARG_FILE_FILTER, Pattern.compile(".*(gif)$"));
                 filePicker.putExtra(FilePickerActivity.ARG_DIRECTORIES_FILTER, false);
                 filePicker.putExtra(FilePickerActivity.ARG_SHOW_HIDDEN, false);
                 startActivityForResult(filePicker, 2);
@@ -193,6 +195,38 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     }
     //--------------------------------------------------------------------------------------
     // Connection
+    public void cast() {
+        if(mNetwork.isClientConnected()) {
+            //AlertDialog
+            new AlertDialog.Builder(this)
+                    .setTitle("Disconnect")
+                    .setMessage("Are you sure you want to disconnect?")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // continue to available lists
+                            mNetwork.tearDownClient();
+                            startConnectionActivity();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // do nothing
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        }
+        else {
+            startConnectionActivity();
+        }
+    }
+
+    public void startConnectionActivity() {
+        Intent connect = new Intent(this, ConnectionActivity.class);
+        connect.putStringArrayListExtra("list", devices);
+        startActivityForResult(connect, 1);
+    }
+
     public void sendMsg(String line) {
         mNetwork.sendMessage(line);
     }
@@ -224,6 +258,11 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         if (requestCode == 1 && resultCode == RESULT_OK) {
             String deviceName = data.getStringExtra("deviceName");
             if(services.containsKey(deviceName)) {
+                mProgressDialog = new ProgressDialog(this);
+                mProgressDialog.setIndeterminate(false);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                mProgressDialog.setMessage("Connecting...");
+                mProgressDialog.show();
                 mNsdHelper.resolveService(services.get(deviceName));
             } else {
                 Toast.makeText(this, "Connection not established", Toast.LENGTH_SHORT).show();
@@ -282,13 +321,16 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         mNetwork.connectToServer(resolvedService.getHost(),
                 resolvedService.getPort());
         // Start "Cast mode"
-        mUpdateHandler.postDelayed(r, 2000);
+        mUpdateHandler.postDelayed(r, 2500);
     }
 
     Runnable r = new Runnable() {
         @Override
         public void run(){
             sendMsg("_CAST_MODE_INITIALIZE_");
+            mProgressDialog.dismiss();
+            MenuItem cast = mMenu.findItem(R.id.cast_black);
+            cast.setIcon(R.mipmap.ic_cast_white_24dp);
         }
     };
 
@@ -314,6 +356,13 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         super.onDestroy();
         mNsdHelper.stopDiscovery();
         mNsdHelper.unregisterService();
+        if (mNetwork.isClientConnected()) {
+            mNetwork.tearDown();
+        }
+        else {
+            mNetwork.tearDownServer();
+        }
     }
+
 }
 

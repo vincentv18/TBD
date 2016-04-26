@@ -10,9 +10,9 @@
         app:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/pause_black"
-        android:icon="@mipmap/ic_pause_circle_filled_black_24dp"
-        android:title="@string/ic_pause_circle_filled_black_24dp"
+        android:id="@+id/stop_black"
+        android:icon="@mipmap/ic_stop"
+        android:title="stop"
         app:showAsAction="ifRoom"/>
 
     <item
