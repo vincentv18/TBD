@@ -71,12 +71,28 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
                 // Handles when the CardView is clicked
                 GifImageView gifImageView = (GifImageView) ((Activity) mContext).findViewById(R.id.gifView);
                 try {
-                    // Sets GifView using file path
-                    GifDrawable gifFromPath = new GifDrawable(ItemList.get(i).path);
-                    gifImageView.setImageDrawable(gifFromPath);
+                    if (ItemList.get(i).path.equals("_NONE_")) {
+                        if (ItemList.get(i).title.equals("Cleat Hitch")) {
+                            GifDrawable gifFromResource = new GifDrawable(mContext.getResources(), R.drawable.cleat);
+                            gifImageView.setImageDrawable(gifFromResource);
+                            ((HomeActivity) mContext).sendMsg(ItemList.get(i).title);
+                        } else if (ItemList.get(i).title.equals("Sit Down")) {
+                            GifDrawable gifFromResource = new GifDrawable(mContext.getResources(), R.drawable.sit);
+                            gifImageView.setImageDrawable(gifFromResource);
+                            ((HomeActivity) mContext).sendMsg(ItemList.get(i).title);
+                        } else if (ItemList.get(i).title.equals("Stop Engine")) {
+                            GifDrawable gifFromResource = new GifDrawable(mContext.getResources(), R.drawable.engine);
+                            gifImageView.setImageDrawable(gifFromResource);
+                            ((HomeActivity) mContext).sendMsg(ItemList.get(i).title);
+                        }
+                    } else {
+                        // Sets GifView using file path
+                        GifDrawable gifFromPath = new GifDrawable(ItemList.get(i).path);
+                        gifImageView.setImageDrawable(gifFromPath);
 
-                    // Send to client
-                    ((HomeActivity) mContext).sendMsg(ItemList.get(i).title);
+                        // Send to client
+                        ((HomeActivity) mContext).sendMsg(ItemList.get(i).title);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                     Toast.makeText(v.getContext(), "File could not be found", Toast.LENGTH_SHORT).show();
@@ -94,16 +110,16 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
                             public void onClick(DialogInterface dialog, int which) {
                                 // continue with delete
                                 Storage storage = SimpleStorage.getExternalStorage();
-                                String content = storage.readTextFile("ShowMeHow", "animation_list.txt");
+                                String content = storage.readTextFile("GifHub", "animation_list.txt");
                                 String[] info = content.split("\\r?\\n");
-                                storage.deleteFile("ShowMeHow", "animation_list.txt");
-                                storage.createFile("ShowMeHow", "animation_list.txt", "");
+                                storage.deleteFile("GifHub", "animation_list.txt");
+                                storage.createFile("GifHub", "animation_list.txt", "");
 
                                 for(int j = 0; j < info.length; ++j) {
                                     String[] files = info[j].split(":");
                                     if(j != i) {
                                         Log.d("Adapter", "add to file: " + files[0]);
-                                        storage.appendFile("ShowMeHow", "animation_list.txt", files[0] + ":" + files[1] + ":");
+                                        storage.appendFile("GifHub", "animation_list.txt", files[0] + ":" + files[1] + ":");
                                     }
                                 }
                                 ItemList.remove(i);

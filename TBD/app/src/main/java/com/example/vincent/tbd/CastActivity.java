@@ -1,5 +1,6 @@
 package com.example.vincent.tbd;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
@@ -32,24 +33,40 @@ public class CastActivity extends AppCompatActivity {
 
     }
 
-    public static void display(String fileName, Storage storage) {
-        String content = storage.readTextFile("ShowMeHow", "animation_list.txt");
+    public static void display(String fileName, Storage storage, Context mContext) {
+        String content = storage.readTextFile("GifHub", "animation_list.txt");
         String[] info = content.split("\\r?\\n");
         if (!content.equals("")) {
             boolean found = false;
             for(int i = 0; i < info.length; ++i) {
                 String[] files = info[i].split(":");
-                if(files[0].equals(fileName)) {
-                    try {
+                try {
+                    if(files[0].equals(fileName)) {
+                        if (files[0].equals("Cleat Hitch")) {
+                            GifDrawable gifFromResource = new GifDrawable(mContext.getResources(), R.drawable.cleat);
+                            mGifImageView.setImageDrawable(gifFromResource);
+                            found = true;
+                            break;
+                        } else if (files[0].equals("Sit Down")) {
+                            GifDrawable gifFromResource = new GifDrawable(mContext.getResources(), R.drawable.sit);
+                            mGifImageView.setImageDrawable(gifFromResource);
+                            found = true;
+                            break;
+                        } else if (files[0].equals("Stop Engine")) {
+                            GifDrawable gifFromResource = new GifDrawable(mContext.getResources(), R.drawable.engine);
+                            mGifImageView.setImageDrawable(gifFromResource);
+                            found = true;
+                            break;
+                        }
                         // Sets GifView using file path
                         GifDrawable gifFromPath = new GifDrawable(files[1]);
                         mGifImageView.setImageDrawable(gifFromPath);
                         found = true;
                         break;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Toast.makeText(mGifImageView.getContext(), "File could not be found", Toast.LENGTH_SHORT).show();
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(mGifImageView.getContext(), "File could not be found", Toast.LENGTH_SHORT).show();
                 }
             }
             if(!found) { Toast.makeText(mGifImageView.getContext(), "File could not be found", Toast.LENGTH_SHORT).show(); }

@@ -69,16 +69,61 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
     // Helper Functions
     private void initializeData() {
         // Gets data from external storage
-        String content = storage.readTextFile("ShowMeHow", "animation_list.txt");
+        String content = storage.readTextFile("GifHub", "animation_list.txt");
         String[] info = content.split("\\r?\\n");
         if (!content.equals("")) {
             for(int i = 0; i < info.length; ++i) {
                 String[] files = info[i].split(":");
-                Bitmap bm = getThumbnail(files[1]);
-                ItemList.add(new Item(files[0], bm, files[1]));
-                mAdapter.notifyDataSetChanged();
+                Bitmap bm = null;
+                if (files[1].equals("_NONE_")){
+                    try {
+                        if (files[0].equals("Cleat Hitch")) {
+                            GifDrawable gifOne = new GifDrawable(getResources(), R.drawable.cleat);
+                            bm = Bitmap.createScaledBitmap(gifOne.getCurrentFrame(), 200, 200, true);
+                        }
+                        else if (files[0].equals("Sit Down")) {
+                            GifDrawable gifTwo = new GifDrawable( getResources(), R.drawable.sit);
+                            bm = Bitmap.createScaledBitmap(gifTwo.getCurrentFrame(), 200, 200, true);
+                        }
+                        else if (files[0].equals("Stop Engine")) {
+                            GifDrawable gifThree = new GifDrawable( getResources(), R.drawable.engine);
+                            bm = Bitmap.createScaledBitmap(gifThree.getCurrentFrame(), 200, 200, true);
+                        }
+                        ItemList.add(new Item(files[0], bm, files[1]));
+                        mAdapter.notifyDataSetChanged();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
+                    bm = getThumbnail(files[1]);
+                    ItemList.add(new Item(files[0], bm, files[1]));
+                    mAdapter.notifyDataSetChanged();
+                }
             }
         }
+    }
+
+    // Creates the beginning gifs
+    // Adds the starting gifs to the RecyclerView and storage
+    private void createGif() throws IOException {
+        //Cleat Hitch
+        GifDrawable gifOne = new GifDrawable( getResources(), R.drawable.cleat);
+        Bitmap bm1 = Bitmap.createScaledBitmap(gifOne.getCurrentFrame(), 200, 200, true);
+        ItemList.add(new Item("Cleat Hitch", bm1, "_NONE_"));
+        storage.appendFile("GifHub", "animation_list.txt", "Cleat Hitch" + ":" + "_NONE_" + ":");
+        //Sit Down
+        GifDrawable gifTwo = new GifDrawable( getResources(), R.drawable.sit);
+        Bitmap bm2 = Bitmap.createScaledBitmap(gifTwo.getCurrentFrame(), 200, 200, true);
+        ItemList.add(new Item("Sit Down", bm2, "_NONE_"));
+        storage.appendFile("GifHub", "animation_list.txt", "Sit Down" + ":" + "_NONE_" + ":");
+        //Stop Engine
+        GifDrawable gifThree = new GifDrawable( getResources(), R.drawable.engine);
+        Bitmap bm3 = Bitmap.createScaledBitmap(gifThree.getCurrentFrame(), 200, 200, true);
+        ItemList.add(new Item("Stop Engine", bm3, "_NONE_"));
+        storage.appendFile("GifHub", "animation_list.txt", "Stop Engine" + ":" + "_NONE_" + ":");
+
+        mAdapter.notifyDataSetChanged();
     }
 
     // Get thumbnail from gif
@@ -148,9 +193,14 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
         mNsdHelper.startDiscovery(NsdType.HTTP);
 
         // Storage
-        storage.createDirectory("ShowMeHow");
-        if (!storage.isFileExist("ShowMeHow", "animation_list.txt")) {
-            storage.createFile("ShowMeHow", "animation_list.txt", "");
+        storage.createDirectory("GifHub");
+        if (!storage.isFileExist("GifHub", "animation_list.txt")) {
+            storage.createFile("GifHub", "animation_list.txt", "");
+            try {
+                createGif();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             initializeData();
         }
@@ -185,6 +235,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
                 // Starts the File Manager
                 Intent filePicker = new Intent(this, FilePickerActivity.class);
                 filePicker.putExtra(FilePickerActivity.ARG_FILE_FILTER, Pattern.compile(".*(gif)$"));
+                filePicker.putExtra(FilePickerActivity.ARG_START_PATH, "/sdcard/Download");
                 filePicker.putExtra(FilePickerActivity.ARG_DIRECTORIES_FILTER, false);
                 filePicker.putExtra(FilePickerActivity.ARG_SHOW_HIDDEN, false);
                 startActivityForResult(filePicker, 2);
@@ -244,7 +295,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
                 CastActivity.stop();
             }
             else {
-                CastActivity.display(fileName, storage);
+                CastActivity.display(fileName, storage, this);
             }
         }
     }
@@ -285,7 +336,7 @@ public class HomeActivity extends AppCompatActivity implements NsdListener {
 
             // Adds the item to the RecyclerView and storage
             ItemList.add(new Item(fileName, bm, filePath));
-            storage.appendFile("ShowMeHow", "animation_list.txt", fileName + ":" + filePath + ":");
+            storage.appendFile("GifHub", "animation_list.txt", fileName + ":" + filePath + ":");
             mAdapter.notifyDataSetChanged();
         }
     }
